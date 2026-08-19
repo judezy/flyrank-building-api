@@ -9,7 +9,7 @@ tasks = [
     {"id": 3, "title": "Call the plumber", "done": True},
 ]
 
-@app.get("/")
+@app.get("/", summary="API root endpoint", description="Returns basic information about the API")
 def read_root():
     return {
         "name": "Task API",
@@ -17,15 +17,15 @@ def read_root():
         "endpoints": ["/tasks"]
     }
 
-@app.get("/health")
+@app.get("/health", summary="Health check endpoint", description="Returns the health status of the API")
 def read_health():
     return {"status": "ok"}
 
-@app.get("/tasks")
+@app.get("/tasks", summary="Get all tasks", description="Returns a list of all tasks")
 def get_tasks():
     return tasks
 
-@app.get("/tasks/{task_id}")
+@app.get("/tasks/{task_id}", summary="Get a task by ID", description="Returns the task with the specified ID")
 def get_task(task_id: int):
     for task in tasks:
         if task["id"] == task_id:
@@ -37,7 +37,7 @@ def get_task(task_id: int):
         content={"error": f"Task {task_id} not found"}
     )
 
-@app.post("/tasks", status_code=status.HTTP_201_CREATED)
+@app.post("/tasks", status_code=status.HTTP_201_CREATED, summary="Create task", description="Creates a new task")
 async def create_task(request: Request):
     try:
         body = await request.json()
@@ -65,7 +65,7 @@ async def create_task(request: Request):
         content=new_task
     )
 
-@app.put("/tasks/{task_id}")
+@app.put("/tasks/{task_id}", status_code=status.HTTP_200_OK, summary="Update task", description="Updates an existing task's title or completion")
 async def update_task(task_id: int, request: Request):
     task = next((task for task in tasks if task["id"] == task_id), None)
 
@@ -106,7 +106,7 @@ async def update_task(task_id: int, request: Request):
 
     return task
 
-@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete task", description="Deletes a task by ID")
 def delete_task(task_id: int):
     global tasks
     task = next((task for task in tasks if task["id"] == task_id), None)
