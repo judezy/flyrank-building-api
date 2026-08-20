@@ -31,7 +31,7 @@ def init_db():
                 [
                     ("Buy apples", 0),
                     ("Clean pears", 1),
-                    ("Call the doctors", 0)
+                    ("Call the doctors", 0),
                 ]
             )
 
@@ -53,19 +53,27 @@ def read_health():
 
 @app.get("/tasks", summary="Get all tasks", description="Returns a list of all tasks")
 def get_tasks():
-    return tasks
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM tasks")
+        rows = cursor.fetchall()
+
+        return [{"id": row["id"], "title": row["title"], "done": bool(row["done"])} for row in rows]
 
 @app.get("/tasks/{task_id}", summary="Get a task by ID", description="Returns the task with the specified ID")
 def get_task(task_id: int):
-    for task in tasks:
-        if task["id"] == task_id:
-            return task
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
+        row = cursor.fetchone()
 
-    # if didn't find the task
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
-        content={"error": f"Task {task_id} not found"}
-    )
+        if not row:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"error": f"Task {task_id} not found"}
+            )
+
+        return {"id": row["id"], "title": row["title"], "done": bool(row["done"])}
 
 @app.post("/tasks", status_code=status.HTTP_201_CREATED, summary="Create task", description="Creates a new task")
 async def create_task(request: Request):
