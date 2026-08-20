@@ -88,15 +88,19 @@ async def create_task(request: Request):
             content={"error": "Title is required and must be non-empty"}
         )
 
-    next_id = max(task["id"] for task in tasks) + 1 if tasks else 1
+    title = str(body["title"]).strip()
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO tasks (title, done) VALUES (?, ?)", (title, 0))
+        conn.commit()
+        task_id = cursor.lastrowid
 
     new_task = {
-        "id": next_id,
-        "title": str(body["title"]).strip(),
+        "id": task_id,
+        "title": title,
         "done": False
     }
-
-    tasks.append(new_task)
 
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
